@@ -2,11 +2,12 @@ import os
 from collections import deque
 from os.path import expanduser
 
-from parsing import JuridicalInfoParser
+from parsing import JuridicalInfoParser, ParseError
 from utils import load_lines, append_file
 
 HOME = expanduser('~')
-FILE_PATH = os.path.join(HOME, 'data', 'ids_test.txt')
+# specify path to input file with bins/iins
+FILE_PATH = os.path.join(HOME, 'data', 'test', 'new_bins.txt')
 MAX_FILE_OUTPUT_SIZE = 500000000
 RETRIES = 4
 TIMEOUT = 1
@@ -16,6 +17,11 @@ BACKOFF = 0.8
 def processed_ids_fpath(fpath):
     """ Return path to file with processed BINs """
     return os.path.splitext(fpath)[0] + '.prsd'
+
+
+def failed_ids_fpath(fpath):
+    """ Return path to file with processed BINs """
+    return os.path.splitext(fpath)[0] + '.fail'
 
 
 def main():
@@ -51,16 +57,21 @@ def main():
     while ids:
         try:
             idx = ids.popleft()
-
             _row = parser.process(idx)
             cnt += 1
 
-            print(f'{cnt} - {_row}')
-            print('-' * 20)
-        except Exception:
+        except ParseError:
             print('Failed to process {}'.format(idx))
+            append_file(failed_ids_fpath(FILE_PATH), idx)
+            print('-' * 20)
+        except Exception as e:
+            print('Failed to process {}'.format(idx))
+            print(e)
         else:
             append_file(processed_ids_fpath(FILE_PATH), idx)
+        finally:
+            print(f'{cnt} - {_row}')
+            print('-' * 20)
 
 
 if __name__ == '__main__':

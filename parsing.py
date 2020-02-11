@@ -58,7 +58,7 @@ def prepare(row_obj):
 
 class JuridicalInfoParser():
     url = "https://stat.gov.kz/api/juridical/?bin={}&lang=ru"
-    headers = {'content-type': 'text/xml'}
+    headers = {}
     # 429 - too many requests
     status_forcelist = (429, 500, 502, 504)
 
@@ -125,29 +125,12 @@ class JuridicalInfoParser():
         _data = tuple()
         try:
             _data = parse(idx, self.url, retries=self.retries, backoff=self.backoff,
-                         timeout=self.timeout, session=self.session)
+                          timeout=self.timeout, session=self.session)
 
-        except NetworkError:
-            self._failed_bins.append(idx)
-
+        except Exception:
+            raise
         if _data:
             row = ';'.join(prepare(_data))
             append_file(self.output_file, row)
 
         return row
-
-
-
-    # _retries = 4
-    # _backoff = 0.8
-    # _session = requests.Session()
-    # _idx = '691127401991'
-    # _url = 'https://stat.gov.kz/api/juridical/?bin={}&lang=ru'.format(_idx)
-    # data = parse(_idx, _url, retries=_retries, backoff=_backoff,
-    #              session=_session)
-    # print(data)
-    # print(prepare(data))
-
-
-
-
